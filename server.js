@@ -1,23 +1,62 @@
 import express from "express";
 import dotenv from "dotenv";
 import bcrypt from "bcrypt";
-import { criarUsuario, buscarUsuarioPorEmail } from "./database.js";
+import jwt from "jsonwebtoken";
+import cookieParser from "cookie-parser";
+import { criarUsuario, buscarUsuarioPorEmail, buscarUsuarioPorId } from "./database.js";
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const SALT_ROUNDS = 12;
+const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_EXPIRA_EM = "7d";
+const COOKIE_NOME = "token";
+
+function emitirToken(res, usuarioId) {
+  const token = jwt.sign({ sub: usuarioId }, JWT_SECRET, { expiresIn: JWT_EXPIRA_EM });
+
+  res.cookie(COOKIE_NOME, token, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
+}
+
+function autenticar(req, res, next) {
+  const token = req.cookies?.[COOKIE_NOME];
+
+  if (!token) {
+    return res.status(401).json({ erro: "Não autenticado. Faça login." });
+  }
+
+  try {
+    req.usuario = jwt.verify(token, JWT_SECRET);
+    next();
+  } catch {
+    res.clearCookie(COOKIE_NOME);
+    return res.status(401).json({ erro: "Sessão expirada. Faça login novamente." });
+  }
+}
 
 function emailValido(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
+app.use(cookieParser()); //lê o header Cookie da requisição e transforma num objeto req.cookies
 app.use(express.json());
 app.use(express.static("public"));
 
 app.get("/api/ping", (req, res) => {
   res.json({ ok: true, mensagem: "Servidor funcionando." });
+});
+
+app.get("/api/eu", autenticar, (req, res) => {
+  const usuario = buscarUsuarioPorId(req.usuario.sub);
+  if (!usuario) return res.status(404).json({ erro: "Usuário não encontrado." });
+  return res.json({ usuario });
 });
 
 app.post("/api/registro", async (req, res) => {
@@ -51,6 +90,36 @@ app.post("/api/registro", async (req, res) => {
     });
   } catch (err) {
     console.error("[registro]", err);
+    return res.status(500).json({ erro: "Erro interno." });
+  }
+});
+
+app.post("/api/login", async (req, res) => {
+  try {
+    const { email, senha } = req.body ?? {};
+
+    if (!email || !senha) {
+      return res.status(400).json({ erro: "E-mail e senha são obrigatórios." });
+    }
+
+    const usuario = buscarUsuarioPorEmail(email.toLowerCase().trim());
+
+    const senhaCorreta = usuario
+      ? await bcrypt.compare(senha, usuario.senha_hash)
+      : false;
+
+    if (!usuario || !senhaCorreta) {
+      return res.status(401).json({ erro: "E-mail ou senha incorretos." });
+    }
+
+    emitirToken(res, usuario.id);
+
+    return res.json({
+      mensagem: "Login realizado.",
+      usuario: { id: usuario.id, nome: usuario.nome, email: usuario.email },
+    });
+  } catch (err) {
+    console.error("[login]", err);
     return res.status(500).json({ erro: "Erro interno." });
   }
 });
