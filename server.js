@@ -14,6 +14,8 @@ import {
   criarAporte,
   listarAportes,
   deletarAporte,
+  calcularResumoAtivo,
+  calcularCarteiraTotal,
 } from "./database.js";
 
 dotenv.config();
@@ -191,6 +193,20 @@ app.delete("/api/aportes/:id", autenticar, (req, res) => {
   }
 
   res.json({ ok: true });
+});
+
+app.get("/api/resumo/:ativo_id", autenticar, (req, res) => {
+  const resumo = calcularResumoAtivo(req.params.ativo_id, req.usuario.sub);
+
+  if (!resumo) {
+    return res.status(404).json({ erro: "Ativo não encontrado." });
+  }
+
+  res.json(resumo);
+});
+
+app.get("/api/carteira", autenticar, (req, res) => {
+  res.json(calcularCarteiraTotal(req.usuario.sub));
 });
 
 app.listen(PORT, () => {

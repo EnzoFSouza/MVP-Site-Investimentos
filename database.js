@@ -120,4 +120,40 @@ export function deletarAporte(id, usuario_id) {
     .run(id, usuario_id);
 }
 
+//FUNÇÕES DE CÁLCULO
+export function calcularResumoAtivo(ativo_id, usuario_id) {
+  return db
+    .prepare(
+      `SELECT
+         at.id,
+         at.nome,
+         at.tipo,
+         at.preco_atual,
+         IFNULL(SUM(ap.quantidade), 0)                          AS quantidade_total,
+         IFNULL(SUM(ap.quantidade * ap.preco_unitario), 0)      AS total_investido,
+         IFNULL(SUM(ap.quantidade), 0) * at.preco_atual         AS valor_atual,
+         (IFNULL(SUM(ap.quantidade), 0) * at.preco_atual)
+           - IFNULL(SUM(ap.quantidade * ap.preco_unitario), 0)  AS lucro_prejuizo
+       FROM ativos at
+       LEFT JOIN (
+         SELECT * FROM aportes
+         WHERE usuario_id = ? AND ativo_id = ?
+       ) ap ON ap.ativo_id = at.id
+       WHERE at.id = ?
+       GROUP BY at.id`
+    )
+    .get(usuario_id, ativo_id, ativo_id);
+}
+
+export function calcularCarteiraTotal(usuario_id) {
+  return db
+    .prepare(
+      `SELECT IFNULL(SUM(ap.quantidade * at.preco_atual), 0) AS valor_total
+       FROM aportes ap
+       JOIN ativos at ON ap.ativo_id = at.id
+       WHERE ap.usuario_id = ?`
+    )
+    .get(usuario_id);
+}
+
 export default db;
