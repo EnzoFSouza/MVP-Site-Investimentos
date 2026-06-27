@@ -3,7 +3,18 @@ import dotenv from "dotenv";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import cookieParser from "cookie-parser";
-import { criarUsuario, buscarUsuarioPorEmail, buscarUsuarioPorId } from "./database.js";
+import {
+  criarUsuario,
+  buscarUsuarioPorEmail,
+  buscarUsuarioPorId,
+  criarAtivo,
+  buscarAtivoPorNome,
+  listarAtivos,
+  atualizarPrecoAtivo,
+  criarAporte,
+  listarAportes,
+  deletarAporte,
+} from "./database.js";
 
 dotenv.config();
 
@@ -122,6 +133,64 @@ app.post("/api/login", async (req, res) => {
     console.error("[login]", err);
     return res.status(500).json({ erro: "Erro interno." });
   }
+});
+
+app.post("/api/logout", (req, res) => {
+  res.clearCookie(COOKIE_NOME, { httpOnly: true, sameSite: "lax" });
+  return res.json({ mensagem: "Logout realizado." });
+});
+
+// Lista só os ativos em que o usuário logado tem aportes
+app.get("/api/ativos", autenticar, (req, res) => {
+  res.json(listarAtivos(req.usuario.sub));
+});
+
+// Cria um ativo global (se já existir, devolve o existente)
+app.post("/api/ativos", autenticar, (req, res) => {
+  const { nome, tipo, preco_atual } = req.body ?? {};
+
+  if (!nome || !tipo || preco_atual === undefined) {
+    return res.status(400).json({ erro: "nome, tipo e preco_atual são obrigatórios." });
+  }
+
+  res.status(201).json(criarAtivo(nome, tipo, preco_atual));
+});
+
+// Atualiza o preço de um ativo (afeta todos os usuários que possuem ele)
+app.put("/api/ativos/:id", autenticar, (req, res) => {
+  const { preco_atual } = req.body ?? {};
+
+  if (preco_atual === undefined) {
+    return res.status(400).json({ erro: "preco_atual é obrigatório." });
+  }
+
+  atualizarPrecoAtivo(req.params.id, preco_atual);
+  res.json({ ok: true });
+});
+
+app.post("/api/aportes", autenticar, (req, res) => {
+  const { ativo_id, quantidade, preco_unitario, data } = req.body ?? {};
+
+  if (!ativo_id || !quantidade || !preco_unitario || !data) {
+    return res.status(400).json({ erro: "ativo_id, quantidade, preco_unitario e data são obrigatórios." });
+  }
+
+  const r = criarAporte(req.usuario.sub, ativo_id, quantidade, preco_unitario, data);
+  res.status(201).json({ id: r.lastInsertRowid });
+});
+
+app.get("/api/aportes", autenticar, (req, res) => {
+  res.json(listarAportes(req.usuario.sub));
+});
+
+app.delete("/api/aportes/:id", autenticar, (req, res) => {
+  const r = deletarAporte(req.params.id, req.usuario.sub);
+
+  if (r.changes === 0) {
+    return res.status(404).json({ erro: "Aporte não encontrado ou não pertence a você." });
+  }
+
+  res.json({ ok: true });
 });
 
 app.listen(PORT, () => {
