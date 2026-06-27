@@ -38,4 +38,21 @@ db.exec(`
 
 //ON DELETE CASCADE: se um usuário for deletado, os aportes dele somem junto.
 //ON DELETE RESTRICT: impede deletar um ativo que ainda tem aportes vinculados
+
+export function buscarUsuarioPorEmail(email) {
+  return db.prepare("SELECT * FROM usuarios WHERE email = ?").get(email);
+}
+
+export function buscarUsuarioPorId(id) {
+  return db
+    .prepare("SELECT id, nome, email, criado_em FROM usuarios WHERE id = ?")
+    .get(id);
+}
+
+export function criarUsuario(nome, email, senhaHash) {
+  return db
+    .prepare("INSERT INTO usuarios (nome, email, senha_hash) VALUES (?, ?, ?)")
+    .run(nome, email, senhaHash);
+}
+
 export default db;
