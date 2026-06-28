@@ -63,29 +63,14 @@ formAporte.addEventListener("submit", async (e) => {
   mensagemErroAporte.classList.add("hidden");
 
   const ticker = document.getElementById("ticker").value.toUpperCase().trim();
-  const tipo = document.getElementById("tipo").value;
-  const precoAtualNovo = document.getElementById("preco-atual-novo").value;
 
   try {
-    // Garante que o ativo existe (cria se não existir)
-    const respostaAtivo = await fetch("/api/ativos", {
+    const respostaAporte = await fetch("/api/aportes/ticker", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
       body: JSON.stringify({
         nome: ticker,
-        tipo: tipo || "ação",
-        preco_atual: parseFloat(precoAtualNovo) || 0,
-      }),
-    });
-    const ativo = await respostaAtivo.json();
-
-    const respostaAporte = await fetch("/api/aportes", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({
-        ativo_id: ativo.id,
         quantidade: parseFloat(document.getElementById("quantidade").value),
         preco_unitario: parseFloat(document.getElementById("preco-unitario").value),
         data: document.getElementById("data").value,
@@ -103,6 +88,7 @@ formAporte.addEventListener("submit", async (e) => {
     formAporte.reset();
     await carregarCarteira();
     await carregarAtivos();
+
   } catch (err) {
     mensagemErroAporte.textContent = "Erro de conexão com o servidor.";
     mensagemErroAporte.classList.remove("hidden");

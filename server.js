@@ -151,29 +151,6 @@ app.get("/api/ativos", autenticar, (req, res) => {
   res.json(listarAtivos(req.usuario.sub));
 });
 
-// Cria um ativo global (se já existir, devolve o existente)
-app.post("/api/ativos", autenticar, (req, res) => {
-  const { nome, tipo, preco_atual } = req.body ?? {};
-
-  if (!nome || !tipo || preco_atual === undefined) {
-    return res.status(400).json({ erro: "nome, tipo e preco_atual são obrigatórios." });
-  }
-
-  res.status(201).json(criarAtivo(nome, tipo, preco_atual));
-});
-
-// Atualiza o preço de um ativo (afeta todos os usuários que possuem ele)
-app.put("/api/ativos/:id", autenticar, (req, res) => {
-  const { preco_atual } = req.body ?? {};
-
-  if (preco_atual === undefined) {
-    return res.status(400).json({ erro: "preco_atual é obrigatório." });
-  }
-
-  atualizarPrecoAtivo(req.params.id, preco_atual);
-  res.json({ ok: true });
-});
-
 app.post("/api/aportes", autenticar, (req, res) => {
   const { ativo_id, quantidade, preco_unitario, data } = req.body ?? {};
 
@@ -182,6 +159,22 @@ app.post("/api/aportes", autenticar, (req, res) => {
   }
 
   const r = criarAporte(req.usuario.sub, ativo_id, quantidade, preco_unitario, data);
+  res.status(201).json({ id: r.lastInsertRowid });
+});
+
+app.post("/api/aportes/ticker", autenticar, (req, res) => {
+  const { nome, quantidade, preco_unitario, data } = req.body ?? {};
+
+  if (!nome || !quantidade || !preco_unitario || !data) {
+    return res.status(400).json({ erro: "nome, quantidade, preco_unitario e data são obrigatórios." });
+  }
+
+  const ativo = buscarAtivoPorNome(nome);
+  if (!ativo) {
+    return res.status(404).json({ erro: `Ativo "${nome.toUpperCase()}" não está disponível.` });
+  }
+
+  const r = criarAporte(req.usuario.sub, ativo.id, quantidade, preco_unitario, data);
   res.status(201).json({ id: r.lastInsertRowid });
 });
 
