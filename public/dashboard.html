@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Carteira de Investimentos</title>
+  <link rel="stylesheet" href="/css/output.css">
+</head>
+<body class="bg-gray-100 min-h-screen">
+
+  <header class="bg-white shadow-sm">
+    <div class="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
+      <h1 class="text-xl font-bold text-gray-800">Minha Carteira</h1>
+      <div class="flex items-center gap-4">
+        <span id="nome-usuario" class="text-gray-600 text-sm"></span>
+        <button id="btn-logout" class="text-sm text-red-600 hover:underline">Sair</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-4xl mx-auto px-4 py-8 space-y-8">
+
+    <section class="bg-white rounded-lg shadow-md p-6">
+      <h2 class="text-lg font-semibold text-gray-800 mb-2">Valor total da carteira</h2>
+      <p id="valor-total" class="text-3xl font-bold text-green-600">R$ 0,00</p>
+    </section>
+
+    <section class="bg-white rounded-lg shadow-md p-6">
+      <h2 class="text-lg font-semibold text-gray-800 mb-4">Novo aporte</h2>
+      <form id="form-aporte" class="grid grid-cols-2 gap-4">
+        <div class="col-span-2">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Ticker do ativo (ex: PETR4)</label>
+          <input type="text" id="ticker" required
+            class="w-full border border-gray-300 rounded-md px-3 py-2">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Tipo (caso seja novo)</label>
+          <input type="text" id="tipo" placeholder="ação, FII, etc."
+            class="w-full border border-gray-300 rounded-md px-3 py-2">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Preço atual (caso seja novo)</label>
+          <input type="number" id="preco-atual-novo" step="0.01"
+            class="w-full border border-gray-300 rounded-md px-3 py-2">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Quantidade</label>
+          <input type="number" id="quantidade" step="0.01" required
+            class="w-full border border-gray-300 rounded-md px-3 py-2">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Preço unitário pago</label>
+          <input type="number" id="preco-unitario" step="0.01" required
+            class="w-full border border-gray-300 rounded-md px-3 py-2">
+        </div>
+        <div class="col-span-2">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Data</label>
+          <input type="date" id="data" required
+            class="w-full border border-gray-300 rounded-md px-3 py-2">
+        </div>
+
+        <p id="mensagem-erro-aporte" class="col-span-2 text-red-600 text-sm hidden"></p>
+
+        <button type="submit"
+          class="col-span-2 bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition">
+          Adicionar aporte
+        </button>
+      </form>
+    </section>
+
+    <section class="bg-white rounded-lg shadow-md p-6">
+      <h2 class="text-lg font-semibold text-gray-800 mb-4">Meus ativos</h2>
+      <div id="lista-ativos" class="space-y-3">
+        <p class="text-gray-500 text-sm">Carregando...</p>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="/js/dashboard.js"></script>
+</body>
+</html>

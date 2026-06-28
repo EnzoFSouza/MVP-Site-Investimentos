@@ -62,6 +62,10 @@ app.use(cookieParser()); //lê o header Cookie da requisição e transforma num 
 app.use(express.json());
 app.use(express.static("public"));
 
+app.get("/", (req, res) => {
+  res.redirect("/login.html");
+});
+
 app.get("/api/ping", (req, res) => {
   res.json({ ok: true, mensagem: "Servidor funcionando." });
 });
