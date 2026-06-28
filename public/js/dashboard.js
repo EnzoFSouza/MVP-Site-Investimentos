@@ -102,11 +102,19 @@ document.getElementById("btn-logout").addEventListener("click", async () => {
 });
 
 // ── Inicialização da página ────────────────────────────────────
-(async function init() {
+async function init() {
   const usuario = await verificarAutenticacao();
   if (!usuario) return;
 
   document.getElementById("nome-usuario").textContent = usuario.nome;
   await carregarCarteira();
   await carregarAtivos();
-})();
+}
+
+init();
+
+window.addEventListener("pageshow", (event) => {
+  if (event.persisted) {
+    init();
+  }
+});
