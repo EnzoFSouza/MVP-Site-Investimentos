@@ -21,7 +21,7 @@ Aplicação web fullstack para acompanhamento de aportes em ativos financeiros (
 ## Tecnologias
 
 **Backend**
-- Node.js + Express 5
+- Node.js + Express
 - SQLite com better-sqlite3
 - JWT (jsonwebtoken) para autenticação
 - bcrypt para hash de senhas
@@ -62,11 +62,8 @@ projeto/
 - Senhas nunca armazenadas em texto puro — hash com bcrypt (custo 12)
 - Token JWT assinado com segredo de 64 bytes gerado aleatoriamente
 - Cookie `httpOnly` impede acesso ao token via JavaScript (proteção contra XSS)
-- Cookie `sameSite: lax` mitiga ataques CSRF
-- Cookie `secure: true` em produção (somente HTTPS)
-- Queries com prepared statements — sem risco de SQL injection
 - `usuario_id` sempre extraído do token verificado, nunca do corpo da requisição — impede que um usuário manipule dados de outro
-- Mensagem de erro genérica no login (não revela se o e-mail existe)
+- Mensagem de erro genérica no login, para não revelar se o e-mail existe
 - Ativos são somente leitura via API — criação e atualização de preços feita via script interno
 
 ---
@@ -78,14 +75,14 @@ projeto/
 ```bash
 # Clonar o repositório
 git clone https://github.com/EnzoFSouza/MVP-Site-Investimentos.git
-cd MVP-Site-investimentos
+cd MVP-Site-Investimentos
 
 # Instalar dependências
 npm install
 
 # Criar o arquivo de variáveis de ambiente
 cp .env.example .env
-# Edite o .env e preencha JWT_SECRET com um valor seguro:
+# Preencha JWT_SECRET com um valor seguro:
 # node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
 
 # Popular o banco com os ativos iniciais
